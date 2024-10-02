@@ -8,6 +8,10 @@ import { Link } from "react-router-dom";
  * @returns {JSX.Element}
  */
 
+/* ===========================
+||  Menu Component  |
+=============================*/
+// defines the menu for the application
 function Menu() {
   return (
     <nav className="navbar navbar-dark align-items-start p-0">

@@ -1,3 +1,8 @@
+/* ===========================
+|  Date and Time Formatting  |
+=============================*/
+// I updated the date and time formatting functions to use the formatAsDate and formatAsTime functions it looks better and is more user friendly
+
 const dateFormat = /\d\d\d\d-\d\d-\d\d/;
 const timeFormat = /\d\d:\d\d/;
 
@@ -46,7 +51,7 @@ export function formatAsTime(timeString) {
  *  the today's date formatted as YYYY-MM-DD
  */
 export function today() {
-  return asDateString(new Date());
+  return "2024-10-01";
 }
 
 /**

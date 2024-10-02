@@ -88,8 +88,22 @@ async function seatReservation(reservation_id, table_id) {
   return await fetchJson(url, options, {});
 }
 
+/**
+ * Retrieves all existing reservations for a specific date
+ * @returns {Promise<[reservation]>}
+ *  a promise that resolves to a possibly empty array of reservations saved in the database.
+ */
+async function listReservations(params, signal) {
+  const url = new URL(`${API_BASE_URL}/reservations`);
+  Object.entries(params).forEach(([key, value]) =>
+    url.searchParams.append(key, value.toString())
+  );
+  return await fetchJson(url, { headers, signal }, []);
+}
+
 module.exports = {
   createReservation,
   createTable,
   seatReservation,
+  listReservations,  // Add this line
 };
