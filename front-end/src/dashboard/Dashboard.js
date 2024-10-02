@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { listReservations } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
 import { previous, next, today } from "../utils/date-time";
-import { useHistory } from "react-router-dom";
-import ReservationCard from "../components/ReservationCard"; // Make sure this component exists
+import ReservationCard from "../components/ReservationCard";
 
 /**
  * Defines the dashboard page.
@@ -20,11 +19,9 @@ function Dashboard() {
   const [reservations, setReservations] = useState([]);
   const [reservationsError, setReservationsError] = useState(null);
   const [currentDate, setCurrentDate] = useState(today());
-  const history = useHistory();
 
   useEffect(loadDashboard, [currentDate]);
 
-  
   function loadDashboard() {
     const abortController = new AbortController();
     setReservationsError(null);
@@ -34,37 +31,38 @@ function Dashboard() {
     return () => abortController.abort();
   }
 
-  function handleDateChange(newDate) {
-    setCurrentDate(newDate);
-    history.push(`/dashboard?date=${newDate}`);
-  }
+  // Function to format the date
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+  };
 
   return (
     <main>
       <h1>Dashboard</h1>
       <div className="d-md-flex mb-3">
-        <h4 className="mb-0">Reservations for {currentDate}</h4>
+        <h4 className="mb-0">Reservations for {formatDate(currentDate)}</h4>
       </div>
       <ErrorAlert error={reservationsError} />
       <div className="btn-group" role="group" aria-label="Date navigation">
         <button
           type="button"
-          className="btn btn-secondary rounded mr-2" 
-          onClick={() => handleDateChange(previous(currentDate))}
+          className="btn btn-secondary"
+          onClick={() => setCurrentDate(previous(currentDate))}
         >
           Previous
         </button>
         <button
           type="button"
-          className="btn btn-primary rounded mr-2" 
-          onClick={() => handleDateChange(today())}
+          className="btn btn-primary"
+          onClick={() => setCurrentDate(today())}
         >
           Today
         </button>
         <button
           type="button"
-          className="btn btn-secondary rounded" 
-          onClick={() => handleDateChange(next(currentDate))}
+          className="btn btn-secondary"
+          onClick={() => setCurrentDate(next(currentDate))}
         >
           Next
         </button>

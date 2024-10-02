@@ -4,10 +4,15 @@ const knex = require("../db/connection");
 | Database Operations |
 ======================*/
 function list(date) {
-  return knex("reservations")
+  console.log("Date received:", date);
+  const query = knex("reservations")
     .select("*")
     .where({ reservation_date: date })
     .orderBy("reservation_time");
+
+  console.log("Query:", query.toString());
+
+  return query;
 }
 
 /* ===========================

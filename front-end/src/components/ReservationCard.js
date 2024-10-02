@@ -1,16 +1,4 @@
 import React from "react";
-import { format, parseISO } from 'date-fns';
-
-// Helper function to format the time
-const formatTime = (time) => {
-  if (!time) return ""; // Guard against invalid time values
-  try {
-    return format(new Date(`1970-01-01T${time}:00`), 'hh:mm a'); // Add seconds if missing
-  } catch (e) {
-    console.error("Error formatting time:", e);
-    return time; // Return raw time if there's an error
-  }
-};
 
 /**
  * Displays the details of a single reservation.
@@ -19,12 +7,32 @@ const formatTime = (time) => {
  * @returns {JSX.Element}
  */
 function ReservationCard({ reservation }) {
+  // Function to format the date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+    return `${month}-${day}-${year}`;
+  };
+
+  // Function to format the time
+  const formatTime = (timeString) => {
+    const [hours, minutes] = timeString.split(':');
+    const date = new Date(2000, 0, 1, hours, minutes); // Year, month, day don't matter
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  // Format the date and time
+  const formattedDate = formatDate(reservation.reservation_date);
+  const formattedTime = formatTime(reservation.reservation_time);
+
   return (
     <div className="reservation-card">
       <p>Name: {reservation.first_name} {reservation.last_name}</p>
       <p>Mobile: {reservation.mobile_number}</p>
-      <p>Date: {format(parseISO(reservation.reservation_date), 'MM-dd-yyyy')}</p>
-      <p>Time: {formatTime(reservation.reservation_time)}</p>
+      <p>Date: {formattedDate}</p>
+      <p>Time: {formattedTime}</p>
       <p>People: {reservation.people}</p>
     </div>
   );

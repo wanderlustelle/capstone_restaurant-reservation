@@ -55,7 +55,46 @@ function validatePeople(req, res, next) {
   next();
 }
 
+/* ===========================
+|  Validate Date Format      |
+=============================*/
+function validateDate(req, res, next) {
+  const { data: { reservation_date } = {} } = req.body;
+  const dateFormat = /^\d{4}-\d{2}-\d{2}$/;
+  
+  if (!dateFormat.test(reservation_date)) {
+    return next({ status: 400, message: "reservation_date must be a valid date in YYYY-MM-DD format" });
+  }
+  
+  const date = new Date(reservation_date);
+  if (isNaN(date.getTime())) {
+    return next({ status: 400, message: "reservation_date must be a valid date" });
+  }
+  
+  next();
+}
+
+/* ===========================
+|  Validate Time Format      |
+=============================*/
+function validateTime(req, res, next) {
+  const { data: { reservation_time } = {} } = req.body;
+  const timeFormat = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+  
+  if (!timeFormat.test(reservation_time)) {
+    return next({ status: 400, message: "reservation_time must be a valid time in HH:MM format" });
+  }
+  
+  next();
+}
+
 module.exports = {
   list: asyncErrorBoundary(list),
-  create: [hasRequiredFields, validatePeople, asyncErrorBoundary(create)],
+  create: [
+    hasRequiredFields,
+    validatePeople,
+    validateDate,
+    validateTime,
+    asyncErrorBoundary(create)
+  ],
 };

@@ -77,17 +77,24 @@ function ReservationForm({ reservation, onSubmit }) {
   };
 
   // handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // prevent default form submission
-    if (validateForm()) { // validate before proceeding
-      try {
-        await createReservation({
-          ...formData,
-          people: Number(formData.people), // ensure people is a number
-        });
-        history.push(`/dashboard?date=${formData.reservation_date}`); // redirect on success
-      } catch (error) {
-        setError(error); // set error state if reservation fails
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrors([]);
+
+    try {
+      const response = await createReservation({
+        ...formData,
+        people: Number(formData.people),
+      });
+
+      if (response) {
+        history.push(`/dashboard?date=${formData.reservation_date}`);
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.error) {
+        setErrors([error.response.data.error]);
+      } else {
+        setErrors(["An unexpected error occurred. Please try again."]);
       }
     }
   };
@@ -95,8 +102,8 @@ function ReservationForm({ reservation, onSubmit }) {
   // rendering the form
   return (
     <form onSubmit={handleSubmit}>
-      <ErrorAlert error={error} /> // display any general error messages
-      
+      <ErrorAlert error={error} /> 
+
       {/* Input fields for reservation details */}
       <div className="form-group">
         <label htmlFor="first_name">First Name:</label>
@@ -109,7 +116,7 @@ function ReservationForm({ reservation, onSubmit }) {
           required
           placeholder="Enter first name"
         />
-        {errors.first_name && <span className="error">{errors.first_name}</span>} // show error if exists
+        {errors.first_name && <span className="error">{errors.first_name}</span>} 
       </div>
 
       <div className="form-group">
@@ -188,5 +195,5 @@ function ReservationForm({ reservation, onSubmit }) {
     </form>
   );
 }
-//some of the comments are redundant but I left them in for clarity and for study purposes
+//some of the mments are redundant but I left them in for clarity and for study purposes
 export default ReservationForm;

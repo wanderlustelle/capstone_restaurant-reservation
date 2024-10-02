@@ -1,8 +1,3 @@
-/* ===========================
-|  Date and Time Formatting  |
-=============================*/
-// I updated the date and time formatting functions to use the formatAsDate and formatAsTime functions it looks better and is more user friendly
-
 const dateFormat = /\d\d\d\d-\d\d-\d\d/;
 const timeFormat = /\d\d:\d\d/;
 
@@ -51,7 +46,7 @@ export function formatAsTime(timeString) {
  *  the today's date formatted as YYYY-MM-DD
  */
 export function today() {
-  return "2024-10-01";
+  return asDateString(new Date());
 }
 
 /**
@@ -84,4 +79,44 @@ export function next(currentDate) {
   date.setMonth(date.getMonth());
   date.setDate(date.getDate() + 1);
   return asDateString(date);
+}
+
+/**
+ * Format a date string in YYYY-MM-DD to a more user-friendly format.
+ * @param dateString
+ *  YYYY-MM-DD date string
+ * @returns {string}
+ *  formatted date string
+ */
+export function formatDisplayDate(dateString) {
+  const date = new Date(dateString);
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  const day = date.getDate();
+  const month = date.toLocaleString('default', { month: 'long' });
+  const year = date.getFullYear();
+  
+  const ordinalSuffix = (day) => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return "st";
+      case 2: return "nd";
+      case 3: return "rd";
+      default: return "th";
+    }
+  };
+
+  return `${month} ${day}${ordinalSuffix(day)}, ${year}`;
+}
+
+/**
+ * Format a time string in HH:MM to a more user-friendly format.
+ * @param timeString
+ *  HH:MM time string
+ * @returns {string}
+ *  formatted time string
+ */
+export function formatDisplayTime(timeString) {
+  const [hours, minutes] = timeString.split(':');
+  const date = new Date(2000, 0, 1, hours, minutes); // Year, month, and day don't matter here
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
