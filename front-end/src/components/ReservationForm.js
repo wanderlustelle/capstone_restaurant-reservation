@@ -79,7 +79,7 @@ function ReservationForm({ reservation, onSubmit }) {
   // handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setErrors([]);
+    if (!validateForm()) return; // Don't submit if validation fails
 
     try {
       const response = await createReservation({
@@ -92,9 +92,9 @@ function ReservationForm({ reservation, onSubmit }) {
       }
     } catch (error) {
       if (error.response && error.response.data && error.response.data.error) {
-        setErrors([error.response.data.error]);
+        setError(error.response.data.error);
       } else {
-        setErrors(["An unexpected error occurred. Please try again."]);
+        setError("An unexpected error occurred. Please try again.");
       }
     }
   };

@@ -1,4 +1,5 @@
 import React from "react";
+import { formatDisplayDate, formatDisplayTime } from "../utils/date-time"; // Import the utility functions
 
 /**
  * Displays the details of a single reservation.
@@ -7,25 +8,9 @@ import React from "react";
  * @returns {JSX.Element}
  */
 function ReservationCard({ reservation }) {
-  // Function to format the date
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const year = String(date.getFullYear()).slice(-2);
-    return `${month}-${day}-${year}`;
-  };
-
-  // Function to format the time
-  const formatTime = (timeString) => {
-    const [hours, minutes] = timeString.split(':');
-    const date = new Date(2000, 0, 1, hours, minutes); // Year, month, day don't matter
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  };
-
-  // Format the date and time
-  const formattedDate = formatDate(reservation.reservation_date);
-  const formattedTime = formatTime(reservation.reservation_time);
+  // Format the date and time using utility functions
+  const formattedDate = formatDisplayDate(reservation.reservation_date);
+  const formattedTime = formatDisplayTime(reservation.reservation_time);
 
   return (
     <div className="reservation-card">

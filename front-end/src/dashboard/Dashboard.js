@@ -20,7 +20,9 @@ function Dashboard() {
   const [reservationsError, setReservationsError] = useState(null);
   const [currentDate, setCurrentDate] = useState(today());
 
-  useEffect(loadDashboard, [currentDate]);
+  useEffect(() => {
+    loadDashboard();
+  }, [currentDate]);
 
   function loadDashboard() {
     const abortController = new AbortController();
@@ -31,17 +33,17 @@ function Dashboard() {
     return () => abortController.abort();
   }
 
-  // Function to format the date
-  const formatDate = (dateString) => {
+  // Function to format the date for display (e.g., "October 3rd, 2024")
+  const formatDisplayDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', options);
   };
 
   return (
     <main>
       <h1>Dashboard</h1>
       <div className="d-md-flex mb-3">
-        <h4 className="mb-0">Reservations for {formatDate(currentDate)}</h4>
+        <h4 className="mb-0">Reservations for {formatDisplayDate(currentDate)}</h4>
       </div>
       <ErrorAlert error={reservationsError} />
       <div className="btn-group" role="group" aria-label="Date navigation">
