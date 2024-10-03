@@ -41,6 +41,29 @@ function ReservationForm({ reservation, onSubmit }) {
     }
   };
 
+  // handle reservation date changes, including validation for past dates or closed days
+  const handleDateChange = (e) => {
+    const selectedDate = new Date(e.target.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setErrors({ ...errors, reservation_date: "Reservation must be for a future date." });
+    } else if (selectedDate.getDay() === 2) { // Tuesday
+      setErrors({ ...errors, reservation_date: "Restaurant is closed on Tuesdays." });
+    } else {
+      setErrors({ ...errors, reservation_date: null });
+    }
+
+    handleChange(e);
+  };
+
+  // check if the selected reservation date falls on a day when the restaurant is closed
+  const isRestaurantClosed = () => {
+    const selectedDate = new Date(formData.reservation_date);
+    return selectedDate.getDay() === 2; // Tuesday
+  };
+
   // validate form inputs before submission
   const validateForm = () => {
     const newErrors = {};
@@ -72,30 +95,36 @@ function ReservationForm({ reservation, onSubmit }) {
       newErrors.people = "Number of people must be at least 1";
     }
 
-    setErrors(newErrors); // update state with validation errors
-    return Object.keys(newErrors).length === 0; // return true if no errors
+    // Check if reservation date is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const reservationDate = new Date(formData.reservation_date);
+    if (reservationDate < today) {
+      newErrors.reservation_date = "Reservation must be for a future date.";
+    }
+
+    // check if reservation is on a Tuesday
+    if (reservationDate.getDay() === 2) {
+      newErrors.reservation_date = "Restaurant is closed on Tuesdays.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   // handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!validateForm()) return; // Don't submit if validation fails
+    if (!validateForm()) return; // don't submit if validation fails
 
     try {
-      const response = await createReservation({
+      await createReservation({
         ...formData,
         people: Number(formData.people),
       });
-
-      if (response) {
-        history.push(`/dashboard?date=${formData.reservation_date}`);
-      }
+      history.push(`/dashboard?date=${formData.reservation_date}`);
     } catch (error) {
-      if (error.response && error.response.data && error.response.data.error) {
-        setError(error.response.data.error);
-      } else {
-        setError("An unexpected error occurred. Please try again.");
-      }
+      setError(error);
     }
   };
 
@@ -195,5 +224,5 @@ function ReservationForm({ reservation, onSubmit }) {
     </form>
   );
 }
-//some of the mments are redundant but I left them in for clarity and for study purposes
+// some comments are redundant but I left them in for clarity and for study purposes
 export default ReservationForm;

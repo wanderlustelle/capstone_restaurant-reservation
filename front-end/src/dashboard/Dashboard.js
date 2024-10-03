@@ -19,6 +19,7 @@ function Dashboard() {
   const [reservations, setReservations] = useState([]);
   const [reservationsError, setReservationsError] = useState(null);
   const [currentDate, setCurrentDate] = useState(today());
+  const [dateError, setDateError] = useState(null);
 
   useEffect(() => {
     loadDashboard();
@@ -33,10 +34,27 @@ function Dashboard() {
     return () => abortController.abort();
   }
 
-  // Function to format the date for display (e.g., "October 3rd, 2024")
+  // function to format the date for display (e.g., "October 3rd, 2024")
   const formatDisplayDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', options);
+  };
+
+  const handleDateChange = (newDate) => {
+    setDateError(null);
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(newDate);
+
+    if (selectedDate < currentDate) {
+      setDateError("Cannot view reservations for past dates.");
+    } else {
+      setCurrentDate(newDate);
+    }
+  };
+
+  const isTuesday = (date) => {
+    return new Date(date).getDay() === 2;
   };
 
   return (
@@ -46,31 +64,34 @@ function Dashboard() {
         <h4 className="mb-0">Reservations for {formatDisplayDate(currentDate)}</h4>
       </div>
       <ErrorAlert error={reservationsError} />
+      {dateError && <ErrorAlert error={{ message: dateError }} />}
       <div className="btn-group" role="group" aria-label="Date navigation">
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={() => setCurrentDate(previous(currentDate))}
+          onClick={() => handleDateChange(previous(currentDate))}
         >
           Previous
         </button>
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => setCurrentDate(today())}
+          onClick={() => handleDateChange(today())}
         >
           Today
         </button>
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={() => setCurrentDate(next(currentDate))}
+          onClick={() => handleDateChange(next(currentDate))}
         >
           Next
         </button>
       </div>
       <div className="mt-4">
-        {reservations.length === 0 ? (
+        {isTuesday(currentDate) ? (
+          <div className="alert alert-info">The restaurant is closed on Tuesdays.</div>
+        ) : reservations.length === 0 ? (
           <div className="alert alert-info">No reservations found for this date.</div>
         ) : (
           reservations.map((reservation) => (

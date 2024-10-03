@@ -20,9 +20,12 @@ async function list(req, res, next) {
 =============================*/
 // create a new reservation
 async function create(req, res, next) {
-  const reservation = req.body.data;
-  const newReservation = await service.create(reservation);
-  res.status(201).json({ data: newReservation });
+  try {
+    const newReservation = await service.create(req.body.data);
+    res.status(201).json({ data: newReservation });
+  } catch (error) {
+    next(error);
+  }
 }
 
 /* ===========================
@@ -58,25 +61,41 @@ function validatePeople(req, res, next) {
 /* ===========================
 |  Validate Date Format      |
 =============================*/
+// validate date format for a reservation
 function validateDate(req, res, next) {
   const { data: { reservation_date } = {} } = req.body;
   const dateFormat = /^\d{4}-\d{2}-\d{2}$/;
-  
+
   if (!dateFormat.test(reservation_date)) {
     return next({ status: 400, message: "reservation_date must be a valid date in YYYY-MM-DD format" });
   }
-  
-  const date = new Date(reservation_date);
+
+  // figured out that i had to append 'T00:00:00' to ensure consistent parsing since it wasn't passing the test for the date
+  const date = new Date(`${reservation_date}T00:00:00`);
+
   if (isNaN(date.getTime())) {
     return next({ status: 400, message: "reservation_date must be a valid date" });
   }
-  
+
+  // check if the reservation is in the past
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (date < today) {
+    return next({ status: 400, message: "Reservation must be for a future date." });
+  }
+
+  // Check if the reservation is on a Tuesday (0 = Sunday, 1 = Monday, 2 = Tuesday, ...)
+  if (date.getDay() === 2) {
+    return next({ status: 400, message: "Restaurant is closed on Tuesdays." });
+  }
+
   next();
 }
-
 /* ===========================
 |  Validate Time Format      |
 =============================*/
+// validate time format for a reservation
 function validateTime(req, res, next) {
   const { data: { reservation_time } = {} } = req.body;
   const timeFormat = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
