@@ -42,16 +42,19 @@ function Dashboard() {
 
   const handleDateChange = (newDate) => {
     setDateError(null);
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-    const selectedDate = new Date(newDate);
-
-    if (selectedDate < currentDate) {
+  
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+  
+    const selectedDate = new Date(newDate + 'T00:00:00');
+  
+    if (selectedDate.getTime() < today.getTime()) {
       setDateError("Cannot view reservations for past dates.");
     } else {
       setCurrentDate(newDate);
     }
   };
+  
 
   const isTuesday = (date) => {
     return new Date(date).getDay() === 2;
