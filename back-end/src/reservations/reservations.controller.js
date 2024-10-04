@@ -129,7 +129,7 @@ module.exports = {
     validatePeople,
     validateDate,
     validateTime,
-    validateReservationTime,
+    validateReservationTime, // replaced hasValidTime with validateReservationTime for better clarity and functionality
     asyncErrorBoundary(create)
   ],
 };
