@@ -77,6 +77,33 @@ function ReservationForm({ reservation, onSubmit }) {
     handleChange(e); // update form data
   };
 
+  // handle reservation time changes, including validation for allowed timeframe
+  const handleTimeChange = (e) => {
+    setError(null); // clear general error messages
+
+    const newTime = e.target.value; // "HH:MM" format
+    const [hours, minutes] = newTime.split(':').map(Number);
+    const selectedTime = new Date(2000, 0, 1, hours, minutes); // arbitrary date, we only care about time
+
+    const openingTime = new Date(2000, 0, 1, 10, 30);
+    const closingTime = new Date(2000, 0, 1, 21, 30);
+    const lastReservationTime = new Date(2000, 0, 1, 20, 30); // 60 minutes before closing
+
+    const newErrors = { ...errors };
+
+    // validation: check if the selected time is within allowed timeframe
+    if (selectedTime < openingTime) {
+      newErrors.reservation_time = "Reservation time must be after 10:30 AM.";
+    } else if (selectedTime > lastReservationTime) {
+      newErrors.reservation_time = "Reservation time must be no later than 8:30 PM.";
+    } else {
+      delete newErrors.reservation_time; // remove error if time is valid
+    }
+
+    setErrors(newErrors);
+    handleChange(e); // update form data
+  };
+
   // check if the selected reservation date falls on a day when the restaurant is closed
   const isRestaurantClosed = () => {
     const selectedDate = new Date(formData.reservation_date);
@@ -127,6 +154,26 @@ function ReservationForm({ reservation, onSubmit }) {
       newErrors.reservation_date = "Restaurant is closed on Tuesdays.";
     }
 
+    // check if reservation date and time combination is in the past
+    const now = new Date();
+    const [hours, minutes] = formData.reservation_time.split(':').map(Number);
+    reservationDate.setHours(hours, minutes);
+
+    if (reservationDate < now) {
+      newErrors.reservation_time = "Reservation must be in the future.";
+    }
+
+    // check if reservation time is within allowed timeframe
+    const openingTime = new Date(reservationDate).setHours(10, 30, 0, 0);
+    const closingTime = new Date(reservationDate).setHours(21, 30, 0, 0);
+    const lastReservationTime = new Date(reservationDate).setHours(20, 30, 0, 0);
+
+    if (reservationDate < openingTime) {
+      newErrors.reservation_time = "Reservation time must be after 10:30 AM.";
+    } else if (reservationDate > lastReservationTime) {
+      newErrors.reservation_time = "Reservation time must be no later than 8:30 PM.";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -151,6 +198,10 @@ function ReservationForm({ reservation, onSubmit }) {
   return (
     <form onSubmit={handleSubmit}>
       <ErrorAlert error={error} /> 
+
+      {Object.values(errors).map((err, index) => (
+        <div key={index} className="alert alert-danger">{err}</div>
+      ))}
 
       {/* Input fields for reservation details */}
       <div className="form-group">
@@ -216,8 +267,10 @@ function ReservationForm({ reservation, onSubmit }) {
           id="reservation_time"
           name="reservation_time"
           value={formData.reservation_time}
-          onChange={handleChange}
+          onChange={handleTimeChange}
           required
+          min="10:30"
+          max="21:30"
           placeholder="HH:MM"
         />
         {errors.reservation_time && <span className="error">{errors.reservation_time}</span>}

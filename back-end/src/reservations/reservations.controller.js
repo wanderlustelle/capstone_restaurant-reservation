@@ -92,6 +92,7 @@ function validateDate(req, res, next) {
 
   next();
 }
+
 /* ===========================
 |  Validate Time Format      |
 =============================*/
@@ -107,6 +108,20 @@ function validateTime(req, res, next) {
   next();
 }
 
+function validateReservationTime(req, res, next) {
+  const { reservation_time } = req.body.data;
+  const openingTime = '10:30';
+  const closingTime = '21:30';
+
+  if (reservation_time < openingTime || reservation_time > closingTime) {
+    return next({
+      status: 400,
+      message: 'Reservation time must be between 10:30 AM and 9:30 PM',
+    });
+  }
+  next();
+}
+
 module.exports = {
   list: asyncErrorBoundary(list),
   create: [
@@ -114,6 +129,7 @@ module.exports = {
     validatePeople,
     validateDate,
     validateTime,
+    validateReservationTime,
     asyncErrorBoundary(create)
   ],
 };
