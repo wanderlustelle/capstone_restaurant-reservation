@@ -92,7 +92,7 @@ function Dashboard() {
         </button>
       </div>
       <div className="mt-4">
-        {isTuesday(currentDate) ? (
+        {isTuesday(next(currentDate)) ? ( // Updated to check if the next day is Tuesday
           <div className="alert alert-info">The restaurant is closed on Tuesdays.</div>
         ) : reservations.length === 0 ? (
           <div className="alert alert-info">No reservations found for this date.</div>
