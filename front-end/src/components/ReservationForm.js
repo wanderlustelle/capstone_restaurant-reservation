@@ -23,11 +23,19 @@ function ReservationForm({ reservation, onSubmit }) {
   const [error, setError] = useState(null); // state for general error messages
   const [errors, setErrors] = useState({}); // state for specific field errors
 
+  // helper function to parse date string into a Date object in local time
+  const parseDate = (dateString) => {
+    const [year, month, day] = dateString.split("-").map(Number);
+    return new Date(year, month - 1, day); // Months are 0-based in JS
+  };
+
   // handle input changes and format mobile number
   const handleChange = (e) => {
+    setError(null);  // Clear general error messages
+  
     const { name, value } = e.target;
     if (name === "mobile_number") {
-      // format phone number with dashes
+      // Format phone number with dashes
       const formattedValue = value.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
       setFormData({
         ...formData,
@@ -43,19 +51,30 @@ function ReservationForm({ reservation, onSubmit }) {
 
   // handle reservation date changes, including validation for past dates or closed days
   const handleDateChange = (e) => {
-    const selectedDate = new Date(e.target.value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    setError(null); // clear general error messages
 
+    const newDate = e.target.value; // "YYYY-MM-DD" format
+    const selectedDate = parseDate(newDate);
+    selectedDate.setHours(0, 0, 0, 0); // normalize to midnight
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize to midnight
+
+    const newErrors = { ...errors };
+
+    // validation: check if the selected date is in the past
     if (selectedDate < today) {
-      setErrors({ ...errors, reservation_date: "Reservation must be for a future date." });
-    } else if (selectedDate.getDay() === 2) { // Tuesday
-      setErrors({ ...errors, reservation_date: "Restaurant is closed on Tuesdays." });
+      newErrors.reservation_date = "Reservation must be for a future date.";
+    }
+    // validation: check if the selected date is a Tuesday (0 = Sunday, 1 = Monday, 2 = Tuesday)
+    else if (selectedDate.getDay() === 2) {
+      newErrors.reservation_date = "Restaurant is closed on Tuesdays.";
     } else {
-      setErrors({ ...errors, reservation_date: null });
+      delete newErrors.reservation_date; // remove error if date is valid
     }
 
-    handleChange(e);
+    setErrors(newErrors);
+    handleChange(e); // update form data
   };
 
   // check if the selected reservation date falls on a day when the restaurant is closed
@@ -95,7 +114,7 @@ function ReservationForm({ reservation, onSubmit }) {
       newErrors.people = "Number of people must be at least 1";
     }
 
-    // Check if reservation date is in the past
+    // check if reservation date is in the past
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const reservationDate = new Date(formData.reservation_date);
@@ -183,7 +202,7 @@ function ReservationForm({ reservation, onSubmit }) {
           id="reservation_date"
           name="reservation_date"
           value={formData.reservation_date}
-          onChange={handleChange}
+          onChange={handleDateChange}
           required
           placeholder="YYYY-MM-DD"
         />
