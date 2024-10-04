@@ -160,7 +160,7 @@ function ReservationForm({ reservation, onSubmit }) {
     reservationDate.setHours(hours, minutes);
 
     if (reservationDate < now) {
-      newErrors.reservation_time = "Reservation must be in the future.";
+      newErrors.reservation_time = "Reservation time must be in the future.";
     }
 
     // check if reservation time is within allowed timeframe
