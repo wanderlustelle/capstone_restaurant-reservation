@@ -31,11 +31,11 @@ function ReservationForm({ reservation, onSubmit }) {
 
   // handle input changes and format mobile number
   const handleChange = (e) => {
-    setError(null);  // Clear general error messages
-  
+    setError(null);  // clear general error messages
+
     const { name, value } = e.target;
     if (name === "mobile_number") {
-      // Format phone number with dashes
+      // format phone number with dashes
       const formattedValue = value.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
       setFormData({
         ...formData,
@@ -87,7 +87,7 @@ function ReservationForm({ reservation, onSubmit }) {
 
     const openingTime = new Date(2000, 0, 1, 10, 30);
     const closingTime = new Date(2000, 0, 1, 21, 30);
-    const lastReservationTime = new Date(2000, 0, 1, 20, 30); // 60 minutes before closing
+    const lastReservationTime = new Date(2000, 0, 1, 20, 30); // last reservation one hour before closing
 
     const newErrors = { ...errors };
 
@@ -104,39 +104,33 @@ function ReservationForm({ reservation, onSubmit }) {
     handleChange(e); // update form data
   };
 
-  // check if the selected reservation date falls on a day when the restaurant is closed
-  const isRestaurantClosed = () => {
-    const selectedDate = new Date(formData.reservation_date);
-    return selectedDate.getDay() === 2; // Tuesday
-  };
-
   // validate form inputs before submission
   const validateForm = () => {
     const newErrors = {};
-    
+
     // check for required fields and set error messages
     if (!formData.first_name.trim()) {
       newErrors.first_name = "First name is required";
     }
-    
+
     if (!formData.last_name.trim()) {
       newErrors.last_name = "Last name is required";
     }
-    
+
     if (!formData.mobile_number.trim()) {
       newErrors.mobile_number = "Mobile number is required";
     } else if (!/^\d{3}-\d{3}-\d{4}$/.test(formData.mobile_number)) {
       newErrors.mobile_number = "Invalid phone number format. Use XXX-XXX-XXXX";
     }
-    
+
     if (!formData.reservation_date) {
       newErrors.reservation_date = "Reservation date is required";
     }
-    
+
     if (!formData.reservation_time) {
       newErrors.reservation_time = "Reservation time is required";
     }
-    
+
     if (!formData.people || formData.people < 1) {
       newErrors.people = "Number of people must be at least 1";
     }
@@ -144,7 +138,8 @@ function ReservationForm({ reservation, onSubmit }) {
     // check if reservation date is in the past
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const reservationDate = new Date(formData.reservation_date);
+    const reservationDate = parseDate(formData.reservation_date);
+
     if (reservationDate < today) {
       newErrors.reservation_date = "Reservation must be for a future date.";
     }
@@ -154,19 +149,21 @@ function ReservationForm({ reservation, onSubmit }) {
       newErrors.reservation_date = "Restaurant is closed on Tuesdays.";
     }
 
-    // check if reservation date and time combination is in the past
+    // had to update because wasn't allowing me to book same day
+    // check if reservation date and time combination is in the past (for today)
     const now = new Date();
     const [hours, minutes] = formData.reservation_time.split(':').map(Number);
     reservationDate.setHours(hours, minutes);
 
-    if (reservationDate < now) {
+    if (reservationDate.toDateString() === today.toDateString() && reservationDate < now) {
       newErrors.reservation_time = "Reservation time must be in the future.";
     }
 
     // check if reservation time is within allowed timeframe
-    const openingTime = new Date(reservationDate).setHours(10, 30, 0, 0);
-    const closingTime = new Date(reservationDate).setHours(21, 30, 0, 0);
-    const lastReservationTime = new Date(reservationDate).setHours(20, 30, 0, 0);
+    const openingTime = new Date(reservationDate);
+    openingTime.setHours(10, 30, 0, 0);
+    const lastReservationTime = new Date(reservationDate);
+    lastReservationTime.setHours(20, 30, 0, 0);
 
     if (reservationDate < openingTime) {
       newErrors.reservation_time = "Reservation time must be after 10:30 AM.";
@@ -175,7 +172,7 @@ function ReservationForm({ reservation, onSubmit }) {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(newErrors).length === 0; // return true if no errors
   };
 
   // handle form submission
@@ -186,9 +183,9 @@ function ReservationForm({ reservation, onSubmit }) {
     try {
       await createReservation({
         ...formData,
-        people: Number(formData.people),
+        people: Number(formData.people), // ensuring people count is stored as a number
       });
-      history.push(`/dashboard?date=${formData.reservation_date}`);
+      history.push(`/dashboard?date=${formData.reservation_date}`); // go back to dashboard once reservation created
     } catch (error) {
       setError(error);
     }
@@ -197,7 +194,7 @@ function ReservationForm({ reservation, onSubmit }) {
   // rendering the form
   return (
     <form onSubmit={handleSubmit}>
-      <ErrorAlert error={error} /> 
+      <ErrorAlert error={error} />
 
       {Object.values(errors).map((err, index) => (
         <div key={index} className="alert alert-danger">{err}</div>
@@ -215,7 +212,7 @@ function ReservationForm({ reservation, onSubmit }) {
           required
           placeholder="Enter first name"
         />
-        {errors.first_name && <span className="error">{errors.first_name}</span>} 
+        {errors.first_name && <span className="error">{errors.first_name}</span>}
       </div>
 
       <div className="form-group">
