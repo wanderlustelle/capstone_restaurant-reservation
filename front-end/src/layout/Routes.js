@@ -3,21 +3,28 @@ import { Redirect, Route, Switch } from "react-router-dom";
 import Dashboard from "../dashboard/Dashboard";
 import NotFound from "./NotFound";
 import { today } from "../utils/date-time";
-import NewReservation from "../reservations/NewReservation"; // Importing the NewReservation component
+import ReservationForm from "../reservations/ReservationForm";
+import NewTable from "../tables/NewTable"; // Import NewTable component
+import SeatReservation from "../reservations/SeatReservation"; // Import the SeatReservation component
+import TableForm from '../tables/TableForm'; // Import TableForm component
 
-/**
- * Defines all the routes for the application.
- * 
- * @returns {JSX.Element}
- */
 function Routes() {
   return (
     <Switch>
       <Route exact={true} path="/">
         <Redirect to={"/dashboard"} />
       </Route>
-      <Route path="/reservations/new">  {/* Route for new reservations */}
-        <NewReservation />
+      <Route path="/reservations/new"> {/* Route for new reservations */}
+        <ReservationForm />
+      </Route>
+      <Route path="/tables/new"> {/* Route for creating a new table */}
+        <NewTable />
+      </Route>
+      <Route exact path="/tables/new">
+        <TableForm />
+      </Route>
+      <Route path="/reservations/:reservation_id/seat">
+        <SeatReservation />
       </Route>
       <Route path="/dashboard">
         <Dashboard date={today()} />
