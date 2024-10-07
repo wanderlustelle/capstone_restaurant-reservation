@@ -1,107 +1,101 @@
 import React, { useEffect, useState } from "react";
-import { listReservations } from "../utils/api";
+import { listReservations, listTables } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
-import { previous, next, today } from "../utils/date-time";
-import ReservationCard from "../components/ReservationCard";
-
-/**
- * Defines the dashboard page.
- * @param date
- *  the date for which the user wants to view reservations.
- * @returns {JSX.Element}
- */
+import ReservationButtons from "./ReservationButtons";
+import ReservationList from "../reservations/ReservationList";
+import TableCard from "../tables/TableCard";
+import { today } from "../utils/date-time";
+import { Link } from "react-router-dom";
 
 /* ===========================
 ||  Dashboard Component  |
 =============================*/
-// displays the dashboard page with reservations for a given date
+
+// update the dashboard component to use the new components for reservations and tables
 function Dashboard() {
   const [reservations, setReservations] = useState([]);
   const [reservationsError, setReservationsError] = useState(null);
   const [currentDate, setCurrentDate] = useState(today());
   const [dateError, setDateError] = useState(null);
+  const [tables, setTables] = useState([]);
+  const [tablesError, setTablesError] = useState(null);
 
   useEffect(() => {
     loadDashboard();
   }, [currentDate]);
 
-  function loadDashboard() {
+  const loadDashboard = () => {
     const abortController = new AbortController();
     setReservationsError(null);
+    setTablesError(null);
+
     listReservations({ date: currentDate }, abortController.signal)
       .then(setReservations)
       .catch(setReservationsError);
+
+    listTables(abortController.signal)
+      .then(setTables)
+      .catch(setTablesError);
+
     return () => abortController.abort();
-  }
+  };
 
   // function to format the date for display (e.g., "October 3rd, 2024")
   const formatDisplayDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', options);
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return new Date(dateString + "T00:00:00").toLocaleDateString("en-US", options);
   };
 
   const handleDateChange = (newDate) => {
     setDateError(null);
-  
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-  
-    const selectedDate = new Date(newDate + 'T00:00:00');
-  
-    if (selectedDate.getTime() < today.getTime()) {
+
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+
+    const selectedDate = new Date(newDate + "T00:00:00");
+
+    if (selectedDate.getTime() < todayDate.getTime()) {
       setDateError("Cannot view reservations for past dates.");
     } else {
       setCurrentDate(newDate);
     }
   };
-  
-
-  const isTuesday = (date) => {
-    return new Date(date).getDay() === 2;
-  };
 
   return (
     <main>
       <h1>Dashboard</h1>
+
+      {/* reservations header with formatted date */}
       <div className="d-md-flex mb-3">
         <h4 className="mb-0">Reservations for {formatDisplayDate(currentDate)}</h4>
       </div>
+
+      {/* date navigation buttons */}
+      <section className="section">
+        <ReservationButtons currentDate={currentDate} handleDateChange={handleDateChange} />
+      </section>
+
+      {/* error alerts for reservations and date */}
       <ErrorAlert error={reservationsError} />
       {dateError && <ErrorAlert error={{ message: dateError }} />}
-      <div className="btn-group" role="group" aria-label="Date navigation">
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => handleDateChange(previous(currentDate))}
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => handleDateChange(today())}
-        >
-          Today
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => handleDateChange(next(currentDate))}
-        >
-          Next
-        </button>
-      </div>
-      <div className="mt-4">
-        {isTuesday(next(currentDate)) ? ( // Updated to check if the next day is Tuesday
-          <div className="alert alert-info">The restaurant is closed on Tuesdays.</div>
-        ) : reservations.length === 0 ? (
-          <div className="alert alert-info">No reservations found for this date.</div>
-        ) : (
-          reservations.map((reservation) => (
-            <ReservationCard key={reservation.reservation_id} reservation={reservation} />
-          ))
-        )}
-      </div>
+
+      {/* reservations section */}
+      <section className="section">
+        <ReservationList reservations={reservations} />
+      </section>
+
+      {/* tables section */}
+      <section className="section">
+        <h2>Tables</h2>
+        <TableCard tables={tables} tablesError={tablesError} />
+      </section>
+
+      {/* link to create a new table */}
+      <section className="section">
+        <Link to="/tables/new">
+          <button className="btn btn-primary mt-3">Create New Table</button>
+        </Link>
+      </section>
     </main>
   );
 }

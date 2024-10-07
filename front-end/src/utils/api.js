@@ -64,7 +64,7 @@ async function fetchJson(url, options, onCancel) {
  *  a promise that resolves to a possibly empty array of reservation saved in the database.
  */
 // retrieve all existing reservations
-export async function listReservations(params, signal) {
+async function listReservations(params, signal) {
   const url = new URL(`${API_BASE_URL}/reservations`);
   Object.entries(params).forEach(([key, value]) =>
     url.searchParams.append(key, value.toString())
@@ -85,13 +85,72 @@ export async function listReservations(params, signal) {
 |   Create a new reservation  |
 =============================*/
 // this function sends a POST request to create a new reservation.
-export async function createReservation(reservation, signal) {
+async function createReservation(reservation, signal) {
   const url = `${API_BASE_URL}/reservations`;
   const options = {
     method: "POST",
     headers,
     body: JSON.stringify({ data: reservation }),
     signal,
+  };
+  return await fetchJson(url, options);
+}
+
+/* ===========================  
+|   List all tables           |
+=============================*/
+/**
+ * Retrieves all tables from the API.
+ * @param {AbortSignal} signal - AbortController signal.
+ * @returns {Promise<Array>} A promise that resolves to an array of table objects.
+ */
+async function listTables(signal) {
+  const url = `${API_BASE_URL}/tables`;
+  return await fetchJson(url, { headers, signal }, []);
+}
+
+// add new function for creating a table
+async function createTable(table, signal) {
+  const url = `${API_BASE_URL}/tables`;
+  const options = {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ data: table }),
+    signal,
+  };
+  return await fetchJson(url, options, table);
+}
+
+// add new function for seating a reservation
+async function seatReservation(tableId, reservationId, signal) {
+  const url = `${API_BASE_URL}/tables/${tableId}/seat`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data: { reservation_id: reservationId } }),
+    signal,
+  };
+  return await fetchJson(url, options);
+}
+
+// updated the export statement to include the new functions
+export {
+  listReservations,
+  createReservation,
+  createTable,
+  seatReservation,
+  listTables,
+};
+
+// add this new function
+export async function updateTable(tableId, reservationId) {
+  const url = `${API_BASE_URL}/tables/${tableId}/seat`;
+  const options = {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ data: { reservation_id: reservationId } }),
   };
   return await fetchJson(url, options);
 }

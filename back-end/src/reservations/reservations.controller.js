@@ -122,8 +122,83 @@ function validateReservationTime(req, res, next) {
   next();
 }
 
+/* ===========================
+|  Seat Reservation Handler  |
+=============================*/
+// seat reservation function
+async function seatReservation(req, res, next) {
+  const { reservation_id } = req.params;
+  const { table_id } = req.body.data;
+
+  try {
+    // make sure the table exists
+    const table = await service.readTable(table_id);
+    if (!table) {
+      return next({ status: 404, message: `Table with id ${table_id} does not exist` });
+    }
+
+    // check if the table is occupied
+    if (table.reservation_id) {
+      return next({ status: 400, message: `Table ${table_id} is already occupied` });
+    }
+
+    // check if the table has sufficient capacity
+    const reservation = await service.read(reservation_id);
+    if (reservation.people > table.capacity) {
+      return next({ status: 400, message: `Table ${table_id} does not have enough capacity for reservation ${reservation_id}` });
+    }
+
+    // check if the table is occupied for the given date/time
+    const isOccupied = await service.isTableOccupied(table_id, reservation_date, reservation_time);
+    if (isOccupied) {
+      return next({ status: 400, message: `Table ID ${table_id} is already occupied for the selected time.` });
+    }
+
+    // seat the reservation at the table
+    const updatedTable = await service.seatReservation(reservation_id, table_id);
+    res.status(200).json({ data: updatedTable });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ===========================
+|  Update Reservation Handler  |
+=============================*/
+// update reservation function
+async function update(req, res, next) {
+  const updatedReservation = req.body.data;
+  const { reservation_id } = req.params;
+  const data = await service.update(reservation_id, updatedReservation);
+  if (!data) {
+    return next({
+      status: 404,
+      message: `Reservation ID ${reservation_id} cannot be found.`,
+    });
+  }
+  res.json({ data });
+}
+
+// Add this function if it doesn't exist
+function read(req, res) {
+  const { reservation } = res.locals;
+  res.json({ data: reservation });
+}
+
+async function reservationExists(req, res, next) {
+  const { reservation_id } = req.params;
+  const reservation = await service.read(reservation_id);
+  if (reservation) {
+    res.locals.reservation = reservation;
+    return next();
+  }
+  next({ status: 404, message: `Reservation ${reservation_id} cannot be found.` });
+}
+
 module.exports = {
   list: asyncErrorBoundary(list),
+  update: asyncErrorBoundary(update),
+  read: [asyncErrorBoundary(reservationExists), read], //added reservationExists to the read function
   create: [
     hasRequiredFields,
     validatePeople,
@@ -132,4 +207,5 @@ module.exports = {
     validateReservationTime, // replaced hasValidTime with validateReservationTime for better clarity and functionality
     asyncErrorBoundary(create)
   ],
+  seatReservation: asyncErrorBoundary(seatReservation),
 };
